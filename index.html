@@ -11,11 +11,14 @@
         <p id="instruction">Position the Defensemen (D) to protect the "Slot".</p>
         
         <div id="rink">
-            <div class="player" id="d1" draggable="true">D1</div>
-            <div class="player" id="d2" draggable="true">D2</div>
-            
-            <div class="target" id="target-d1" style="top: 300px; left: 150px;"></div>
-            <div class="target" id="target-d2" style="top: 300px; left: 250px;"></div>
+            <div class="faceoff-circle left-circle"></div>
+            <div class="faceoff-circle right-circle"></div>
+        
+            <div class="target" id="target-d1" style="top: 580px; left: 130px;"></div>
+            <div class="target" id="target-d2" style="top: 580px; left: 230px;"></div>
+        
+            <div class="target" id="target-d1" style="bottom: 60px; left: 140px;"></div>
+            <div class="target" id="target-d2" style="bottom: 60px; right: 140px;"></div>
         </div>
 
         <button onclick="checkAnswer()">Check Strategy</button>
