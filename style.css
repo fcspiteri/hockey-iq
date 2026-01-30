@@ -1,87 +1,53 @@
 #rink {
     width: 400px;
-    height: 700px;
+    height: 800px; /* Taller for full rink */
     background-color: #fdfdfd; 
     border: 6px solid #222;
-    border-radius: 80px 80px 20px 20px;
+    border-radius: 80px; /* Rounded at both ends now */
     position: relative;
     margin: 20px auto;
     overflow: hidden;
-    /* This creates the lines as narrow strips rather than filling the area */
+    
     background-image: 
-        /* Center Red Line */
-        linear-gradient(to bottom, transparent 348px, #cc0000 348px, #cc0000 352px, transparent 352px),
-        /* Blue Line */
-        linear-gradient(to bottom, transparent 230px, #0033cc 230px, #0033cc 240px, transparent 240px),
-        /* Goal Line */
-        linear-gradient(to bottom, transparent 650px, #ff4d4d 650px, #ff4d4d 652px, transparent 652px);
+        /* Center Red Line (The Middle) */
+        linear-gradient(to bottom, transparent 398px, #cc0000 398px, #cc0000 402px, transparent 402px),
+        /* Top Blue Line */
+        linear-gradient(to bottom, transparent 280px, #0033cc 280px, #0033cc 290px, transparent 290px),
+        /* Bottom Blue Line */
+        linear-gradient(to bottom, transparent 510px, #0033cc 510px, #0033cc 520px, transparent 520px),
+        /* Top Goal Line */
+        linear-gradient(to bottom, transparent 60px, #ff4d4d 60px, #ff4d4d 62px, transparent 62px),
+        /* Bottom Goal Line */
+        linear-gradient(to bottom, transparent 738px, #ff4d4d 738px, #ff4d4d 740px, transparent 740px);
     background-repeat: no-repeat;
 }
 
-/* The "House" / Goal Crease */
-#rink::before {
-    content: "";
-    position: absolute;
-    top: 650px; /* Aligned exactly with the goal line */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80px;
-    height: 40px;
-    background-color: rgba(135, 206, 235, 0.4); /* Transparent light blue */
-    border: 2px solid #ff4d4d;
-    border-radius: 0 0 40px 40px; /* Semi-circle facing down */
-    z-index: 1;
-}
-
+/* Base style for all 4 faceoff circles */
 .faceoff-circle {
     position: absolute;
-    width: 130px;
-    height: 130px;
+    width: 110px;
+    height: 110px;
     border: 2px solid #ff4d4d;
     border-radius: 50%;
-    pointer-events: none; /* Crucial: mouse clicks pass through to the ice */
+    pointer-events: none;
     z-index: 1;
 }
 
-/* Position them in the "Offensive" zone (Top) */
-.left-circle { top: 50px; left: 25px; }
-.right-circle { top: 50px; right: 25px; }
+/* Positions for all four circles */
+.top-left { top: 70px; left: 30px; }
+.top-right { top: 70px; right: 30px; }
+.bot-left { bottom: 70px; left: 30px; }
+.bot-right { bottom: 70px; right: 30px; }
 
-/* Adding the center faceoff spot */
-.center-spot {
+/* Center Faceoff Circle (The Blue one in the middle) */
+.center-circle {
     position: absolute;
-    top: 345px;
-    left: 195px;
-    width: 10px;
-    height: 10px;
-    background: #0033cc;
-    border-radius: 50%;
-    z-index: 1;
-}
-
-.player {
-    width: 36px;
-    height: 36px;
-    background-color: #222; /* Darker jersey color */
-    color: white;
-    border: 2px solid gold; /* Team accent color */
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-family: sans-serif;
-    position: absolute;
-    cursor: grab;
-    z-index: 10;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-}
-
-.target {
-    width: 44px;
-    height: 44px;
-    border: 2px dashed rgba(0, 0, 0, 0.2);
-    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    border: 3px solid #0033cc;
     border-radius: 50%;
     pointer-events: none;
 }
