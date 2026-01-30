@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hockey Strategy Lab</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <h2>Scenario: The Defensive Zone Box</h2>
+        <p id="instruction">Position the Defensemen (D) to protect the "Slot".</p>
+        
+        <div id="rink">
+            <div class="player" id="d1" draggable="true">D1</div>
+            <div class="player" id="d2" draggable="true">D2</div>
+            
+            <div class="target" id="target-d1" style="top: 300px; left: 150px;"></div>
+            <div class="target" id="target-d2" style="top: 300px; left: 250px;"></div>
+        </div>
+
+        <button onclick="checkAnswer()">Check Strategy</button>
+        <p id="feedback"></p>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
