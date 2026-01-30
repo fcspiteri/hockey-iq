@@ -1,37 +1,71 @@
 #rink {
     width: 400px;
-    height: 600px;
-    background-color: #f0f8ff; /* Ice color */
-    border: 5px solid #333;
-    border-radius: 50px 50px 20px 20px;
+    height: 700px;
+    background-color: #f0f8ff; /* Ice White */
+    border: 4px solid #333;
+    border-radius: 60px 60px 10px 10px; /* Rounded corners at the "top" (O-Zone) */
     position: relative;
     margin: 20px auto;
+    overflow: hidden;
+    /* Layering the lines using gradients */
     background-image: 
-        linear-gradient(red 2px, transparent 2px), /* Red line */
-        radial-gradient(circle, transparent 70%, blue 72%); /* Simple faceoff circle */
-    background-size: 100% 50%, 100px 100px;
+        /* Goal Crease (Light Blue Semi-Circle) */
+        radial-gradient(circle at 50% 90%, #add8e6 40px, transparent 41px),
+        /* Goal Line (Thin Red) */
+        linear-gradient(to right, transparent 5%, red 5%, red 95%, transparent 95%),
+        /* Blue Line */
+        linear-gradient(to bottom, transparent 200px, blue 200px, blue 208px, transparent 208px),
+        /* Center Red Line */
+        linear-gradient(to bottom, transparent 348px, red 348px, red 352px, transparent 352px);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+
+/* Adding the Faceoff Circles using Pseudo-elements */
+#rink::before, #rink::after {
+    content: "";
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border: 2px solid red;
+    border-radius: 50%;
+}
+
+/* Top Left Circle */
+#rink::before {
+    top: 50px;
+    left: 40px;
+}
+
+/* Top Right Circle */
+#rink::after {
+    top: 50px;
+    right: 40px;
 }
 
 .player {
-    width: 40px;
-    height: 40px;
-    background-color: #cc0000;
+    width: 36px;
+    height: 36px;
+    background-color: #222; /* Darker jersey color */
     color: white;
+    border: 2px solid gold; /* Team accent color */
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
+    font-size: 12px;
+    font-family: sans-serif;
     position: absolute;
     cursor: grab;
     z-index: 10;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
 .target {
-    width: 50px;
-    height: 50px;
-    border: 2px dashed #bbb;
+    width: 44px;
+    height: 44px;
+    border: 2px dashed rgba(0, 0, 0, 0.2);
     position: absolute;
     border-radius: 50%;
-    pointer-events: none; /* So it doesn't block dragging */
+    pointer-events: none;
 }
