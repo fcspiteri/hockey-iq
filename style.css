@@ -1,46 +1,62 @@
 #rink {
     width: 400px;
     height: 700px;
-    background-color: #f0f8ff; /* Ice White */
-    border: 4px solid #333;
-    border-radius: 60px 60px 10px 10px; /* Rounded corners at the "top" (O-Zone) */
+    background-color: #fdfdfd; 
+    border: 6px solid #222;
+    border-radius: 80px 80px 20px 20px;
     position: relative;
     margin: 20px auto;
     overflow: hidden;
-    /* Layering the lines using gradients */
+    /* This creates the lines as narrow strips rather than filling the area */
     background-image: 
-        /* Goal Crease (Light Blue Semi-Circle) */
-        radial-gradient(circle at 50% 90%, #add8e6 40px, transparent 41px),
-        /* Goal Line (Thin Red) */
-        linear-gradient(to right, transparent 5%, red 5%, red 95%, transparent 95%),
-        /* Blue Line */
-        linear-gradient(to bottom, transparent 200px, blue 200px, blue 208px, transparent 208px),
         /* Center Red Line */
-        linear-gradient(to bottom, transparent 348px, red 348px, red 352px, transparent 352px);
-    background-size: 100% 100%;
+        linear-gradient(to bottom, transparent 348px, #cc0000 348px, #cc0000 352px, transparent 352px),
+        /* Blue Line */
+        linear-gradient(to bottom, transparent 230px, #0033cc 230px, #0033cc 240px, transparent 240px),
+        /* Goal Line */
+        linear-gradient(to bottom, transparent 650px, #ff4d4d 650px, #ff4d4d 652px, transparent 652px);
     background-repeat: no-repeat;
 }
 
-/* Adding the Faceoff Circles using Pseudo-elements */
-#rink::before, #rink::after {
+/* The "House" / Goal Crease */
+#rink::before {
     content: "";
     position: absolute;
-    width: 100px;
-    height: 100px;
-    border: 2px solid red;
+    top: 650px; /* Aligned exactly with the goal line */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 40px;
+    background-color: rgba(135, 206, 235, 0.4); /* Transparent light blue */
+    border: 2px solid #ff4d4d;
+    border-radius: 0 0 40px 40px; /* Semi-circle facing down */
+    z-index: 1;
+}
+
+.faceoff-circle {
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    border: 2px solid #ff4d4d;
     border-radius: 50%;
+    pointer-events: none; /* Crucial: mouse clicks pass through to the ice */
+    z-index: 1;
 }
 
-/* Top Left Circle */
-#rink::before {
-    top: 50px;
-    left: 40px;
-}
+/* Position them in the "Offensive" zone (Top) */
+.left-circle { top: 50px; left: 25px; }
+.right-circle { top: 50px; right: 25px; }
 
-/* Top Right Circle */
-#rink::after {
-    top: 50px;
-    right: 40px;
+/* Adding the center faceoff spot */
+.center-spot {
+    position: absolute;
+    top: 345px;
+    left: 195px;
+    width: 10px;
+    height: 10px;
+    background: #0033cc;
+    border-radius: 50%;
+    z-index: 1;
 }
 
 .player {
