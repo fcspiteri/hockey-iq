@@ -1,0 +1,37 @@
+#rink {
+    width: 400px;
+    height: 600px;
+    background-color: #f0f8ff; /* Ice color */
+    border: 5px solid #333;
+    border-radius: 50px 50px 20px 20px;
+    position: relative;
+    margin: 20px auto;
+    background-image: 
+        linear-gradient(red 2px, transparent 2px), /* Red line */
+        radial-gradient(circle, transparent 70%, blue 72%); /* Simple faceoff circle */
+    background-size: 100% 50%, 100px 100px;
+}
+
+.player {
+    width: 40px;
+    height: 40px;
+    background-color: #cc0000;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    position: absolute;
+    cursor: grab;
+    z-index: 10;
+}
+
+.target {
+    width: 50px;
+    height: 50px;
+    border: 2px dashed #bbb;
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none; /* So it doesn't block dragging */
+}
