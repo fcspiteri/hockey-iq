@@ -2,28 +2,273 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Hockey Strategy Lab</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Hockey IQ Test App</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #eee; }
+       
+        /* The CSS background rink */
+        svg {
+            border: 2px solid #333;
+            background-color: #f0f0f0; /* Fallback grey */
+            background-image: url("rink.jpg");
+            background-size: 100% 100%;
+            display: block;
+            margin: 20px auto;
+        }
+
+.puck-group { cursor: radial-gradient; }
+.puck-group circle {
+filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
+}
+
+        .player-group { cursor: grab; }
+        .player-group:active { cursor: grabbing; }
+        circle { stroke: white; stroke-width: 2px; }
+        text { font-weight: bold; pointer-events: none; } /* Prevents text from blocking the drag */
+       
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <div id="game-container">
-        <h2>Scenario: The Defensive Zone Box</h2>
-        <p id="instruction">Position the Defensemen (D) to protect the "Slot".</p>
-        
-        <div id="rink">
-            <div class="faceoff-circle left-circle"></div>
-            <div class="faceoff-circle right-circle"></div>
-        
-            <div class="target" id="target-d1" style="top: 580px; left: 130px;"></div>
-            <div class="target" id="target-d2" style="top: 580px; left: 230px;"></div>
-        
-            <div class="target" id="target-d1" style="bottom: 60px; left: 140px;"></div>
-            <div class="target" id="target-d2" style="bottom: 60px; right: 140px;"></div>
-        </div>
 
-        <button onclick="checkAnswer()">Check Strategy</button>
-        <p id="feedback"></p>
-    </div>
-    <script src="script.js"></script>
+    <h1>Hockey IQ Test: Power Play Positioning</h1>
+    <p>Drag the players to their spots!</p>
+
+    <svg id="rink" width="1000" height="582"></svg>
+   
+    <br>
+    <button onclick="checkPositions()">Check Positions</button>
+
+<script>
+let currentLevel = 0;
+const svg = d3.select("#rink");
+
+// Create the arrowhead definition
+svg.append("defs").append("marker")
+.attr("id", "arrowhead")
+.attr("viewBox", "0 -5 10 10")
+.attr("refX", 8)
+.attr("refY", 0)
+.attr("markerWidth", 6)
+.attr("markerHeight", 6)
+.attr("orient", "auto")
+.append("path")
+.attr("d", "M0,-5L10,0L0,5")
+.attr("fill", "red");
+
+const scenarios = [
+{
+title: "The other team is skating up the ice with the puck",
+goal: "Place position yourself",
+players: [
+{ id: "1", x: 500, y: 530, validSpots: [{x: 730, y: 320}] }
+],
+puck: {x: 680, y: 390},
+opponents: [
+{ x: 660, y: 390 ,
+showArrow: true,
+arrowAngle: 0,
+arrowLength: 70
+},
+{ x: 660, y: 210 ,
+showArrow: true,
+arrowAngle: 0,
+arrowLength: 70
+}
+]
+},
+{
+title: "The other team is skating up the ice with the puck",
+goal: "Place position yourself",
+players: [
+{ id: "1", x: 500, y: 530, validSpots: [{x: 550, y: 175}] }
+],
+puck: {x: 470, y: 150},
+opponents: [
+{ x: 450, y: 150 ,
+showArrow: true,
+arrowAngle: 0,
+arrowLength: 70
+}
+]
+},
+{
+title: "The puck is behind the net in your defensive zone",
+goal: "Place players 1 through 4 for the breakout",
+players: [
+{ id: "1", x: 930, y: 290, validSpots: [{x: 930, y: 290}] },
+{ id: "2", x: 300, y: 450, validSpots: [{x: 830, y: 270}] },
+{ id: "3", x: 500, y: 450, validSpots: [{x: 780, y: 60}, {x: 780, y: 520}] },
+{ id: "4", x: 700, y: 450, validSpots: [{x: 780, y: 60}, {x: 780, y: 520}] }
+],
+puck: {x: 935, y: 280},
+opponents: [
+{ x: 800, y: 370, showArrow: false},
+{ x: 800, y: 100, showArrow: false},
+{ x: 850, y: 290, showArrow: false},
+{ x: 680, y: 280, showArrow: false}
+]
+},
+{
+title: "The puck is in your offensive zone",
+goal: "Place players 1 through 4",
+players: [
+{ id: "1", x: 100, y: 450, validSpots: [{x: 100, y: 100}] },
+{ id: "2", x: 300, y: 450, validSpots: [{x: 160, y: 280}] },
+{ id: "3", x: 500, y: 450, validSpots: [{x: 250, y: 70}, {x: 60, y: 280}] },
+{ id: "4", x: 700, y: 450, validSpots: [{x: 300, y: 280}] }
+],
+puck: {x: 75, y: 75},
+opponents: [
+{ x: 70, y: 100, showArrow: false },
+{ x: 200, y: 90, showArrow: false },
+{ x: 240, y: 260, showArrow: false },
+{ x: 150, y: 230, showArrow: false },
+{ x: 110, y: 280, showArrow: false }  
+]
+},
+{
+title: "The puck is in your defensive zone",
+goal: "Place players 1 through 4",
+players: [
+{ id: "1", x: 100, y: 450, validSpots: [{x: 925, y: 100}] },
+{ id: "2", x: 300, y: 450, validSpots: [{x: 850, y: 280}] },
+{ id: "3", x: 500, y: 450, validSpots: [{x: 930, y: 270}] },
+{ id: "4", x: 700, y: 450, validSpots: [{x: 700, y: 280}] }
+],
+puck: {x: 925, y: 75},
+opponents: [
+{ x: 890, y: 70, showArrow: false },
+{ x: 860, y: 310, showArrow: false },
+{ x: 930, y: 290, showArrow: false },
+{ x: 680, y: 280, showArrow: false }
+]
+}
+];
+
+function loadLevel(levelIndex) {
+const level = scenarios[levelIndex];
+d3.select("h1").text(level.title);
+d3.select("p").text(level.goal);
+
+// 1. Clear everything first
+svg.selectAll(".player-group, .puck-group, .target-hint, .opponent-group").remove();
+
+// 2. Draw the Puck
+const puckGroup = svg.append("g")
+.datum(level.puck)
+.attr("class", "puck-group")
+.attr("transform", d => `translate(${d.x}, ${d.y})`)
+.call(d3.drag()
+.on("start", function() { d3.select(this).raise(); })
+.on("drag", function(event, d) {
+d.x = event.x; d.y = event.y;
+d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
+}));
+
+puckGroup.append("circle").attr("r", 10).attr("fill", "black");
+
+// 3. Draw Opponents and their optional arrows
+const opponents = svg.selectAll(".opponent-group")
+.data(level.opponents || [])
+.enter()
+.append("g")
+.attr("class", "opponent-group");
+
+opponents.each(function(d) {
+const group = d3.select(this);
+
+// Draw the "X"
+group.append("text")
+.attr("x", d.x)
+.attr("y", d.y)
+.attr("text-anchor", "middle")
+.attr("dominant-baseline", "central")
+.attr("font-size", "30px")
+.attr("fill", "red")
+.text("X");
+
+// Draw the arrow if showArrow is true
+if (d.showArrow) {
+const radians = (d.arrowAngle || 0) * (Math.PI / 180);
+const x2 = d.x + (d.arrowLength || 40) * Math.cos(radians);
+const y2 = d.y + (d.arrowLength || 40) * Math.sin(radians);
+
+group.append("line")
+.attr("x1", d.x)
+.attr("y1", d.y)
+.attr("x2", x2)
+.attr("y2", y2)
+.attr("stroke", "red")
+.attr("stroke-width", 3)
+.attr("marker-end", "url(#arrowhead)");
+}
+});
+
+
+// 4. Draw faint hints for valid spots
+//level.players.forEach(player => {
+//player.validSpots.forEach(spot => {
+//svg.append("circle")
+//.attr("class", "target-hint")
+//.attr("cx", spot.x)
+//.attr("cy", spot.y)
+//.attr("r", 20)
+//.attr("fill", "red")
+//.attr("opacity", 0.1);
+//});
+//});
+
+
+// 5. Draw the draggable players
+const playerGroups = svg.selectAll(".player-group")
+.data(level.players)
+.enter()
+.append("g")
+.attr("class", "player-group")
+.attr("transform", d => `translate(${d.x}, ${d.y})`)
+.call(d3.drag()
+.on("start", function() { d3.select(this).raise(); })
+.on("drag", dragged));
+
+playerGroups.append("circle").attr("r", 25).attr("fill", "#007bff");
+playerGroups.append("text").attr("dy", ".35em").attr("text-anchor", "middle").attr("fill", "white").text(d => d.id);
+
+}
+
+function dragged(event, d) {
+d.x = event.x; d.y = event.y;
+d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
+}
+
+function checkPositions() {
+const level = scenarios[currentLevel];
+let correctPlayers = 0;
+level.players.forEach(player => {
+const isCorrect = player.validSpots.some(spot => {
+const dist = Math.sqrt(Math.pow(player.x - spot.x, 2) + Math.pow(player.y - spot.y, 2));
+return dist < 50;
+});
+if (isCorrect) correctPlayers++;
+});
+
+if (correctPlayers === level.players.length) {
+alert("Correct! Team is in position.");
+currentLevel++;
+if (currentLevel < scenarios.length) loadLevel(currentLevel);
+} else {
+alert(`You have ${correctPlayers} out of ${level.players.length} players correct.`);
+}
+}
+
+svg.on("mousemove", function(event) {
+const coords = d3.pointer(event);
+document.title = `X: ${Math.round(coords[0])}, Y: ${Math.round(coords[1])}`;
+});
+
+loadLevel(currentLevel);
+</script>
+
 </body>
 </html>
