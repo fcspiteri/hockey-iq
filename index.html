@@ -59,6 +59,20 @@ svg.append("defs").append("marker")
 
 const scenarios = [
 {
+title: "The puck is behind the net in your defensive zone",
+goal: "Place players 1 through 4 for the breakout",
+players: [
+{ id: "1", x: 255, y: 510, validSpots: [{x: 255, y: 510}] },
+{ id: "2", x: 180, y: 350, validSpots: [{x: 305, y: 280}, {x: 175, y: 280}, {x: 95, y: 500}] },
+{ id: "3", x: 235, y: 370, validSpots: [{x: 305, y: 280}, {x: 175, y: 280}, {x: 95, y: 500}] },
+{ id: "4", x: 225, y: 315, validSpots: [{x: 305, y: 280}, {x: 175, y: 280}, {x: 95, y: 500}] }
+],
+puck: {x: 230, y: 530},
+opponents: [
+{ x: 210, y: 510, showArrow: false}
+]
+},
+{
 title: "The other team is skating up the ice with the puck",
 goal: "Place position yourself",
 players: [
@@ -97,17 +111,17 @@ arrowLength: 70
 title: "The puck is behind the net in your defensive zone",
 goal: "Place players 1 through 4 for the breakout",
 players: [
-{ id: "1", x: 930, y: 290, validSpots: [{x: 930, y: 290}] },
-{ id: "2", x: 300, y: 450, validSpots: [{x: 830, y: 270}] },
-{ id: "3", x: 500, y: 450, validSpots: [{x: 780, y: 60}, {x: 780, y: 520}] },
-{ id: "4", x: 700, y: 450, validSpots: [{x: 780, y: 60}, {x: 780, y: 520}] }
+{ id: "1", x: 945, y: 280, validSpots: [{x: 945, y: 280}] },
+{ id: "2", x: 730, y: 230, validSpots: [{x: 840, y: 270}, {x: 830, y: 60}, {x: 830, y: 520}] },
+{ id: "3", x: 730, y: 280, validSpots: [{x: 840, y: 270}, {x: 830, y: 60}, {x: 830, y: 520}] },
+{ id: "4", x: 730, y: 330, validSpots: [{x: 840, y: 270}, {x: 830, y: 60}, {x: 830, y: 520}] }
 ],
-puck: {x: 935, y: 280},
+puck: {x: 920, y: 280},
 opponents: [
 { x: 800, y: 370, showArrow: false},
 { x: 800, y: 100, showArrow: false},
 { x: 850, y: 290, showArrow: false},
-{ x: 680, y: 280, showArrow: false}
+{ x: 630, y: 280, showArrow: false}
 ]
 },
 {
@@ -132,10 +146,10 @@ opponents: [
 title: "The puck is in your defensive zone",
 goal: "Place players 1 through 4",
 players: [
-{ id: "1", x: 100, y: 450, validSpots: [{x: 925, y: 100}] },
-{ id: "2", x: 300, y: 450, validSpots: [{x: 850, y: 280}] },
-{ id: "3", x: 500, y: 450, validSpots: [{x: 930, y: 270}] },
-{ id: "4", x: 700, y: 450, validSpots: [{x: 700, y: 280}] }
+{ id: "1", x: 820, y: 200, validSpots: [{x: 925, y: 100}] },
+{ id: "2", x: 800, y: 290, validSpots: [{x: 850, y: 280}] },
+{ id: "3", x: 770, y: 210, validSpots: [{x: 930, y: 270}] },
+{ id: "4", x: 760, y: 270, validSpots: [{x: 700, y: 280}] }
 ],
 puck: {x: 925, y: 75},
 opponents: [
