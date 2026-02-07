@@ -6,28 +6,52 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         body { font-family: sans-serif; text-align: center; background: #eee; }
-       
-        /* The CSS background rink */
+        
         svg {
             border: 2px solid #333;
-            background-color: #f0f0f0; /* Fallback grey */
-            background-image: url("rink.jpg");
+            background-color: #f0f0f0; 
+            background-image: url("rink.jpg"); 
             background-size: 100% 100%;
             display: block;
             margin: 20px auto;
         }
 
-.puck-group { cursor: radial-gradient; }
-.puck-group circle {
-filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
-}
+        .puck-group { cursor: radial-gradient; }
+        .puck-group circle { filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5)); }
 
         .player-group { cursor: grab; }
         .player-group:active { cursor: grabbing; }
-        circle { stroke: white; stroke-width: 2px; }
-        text { font-weight: bold; pointer-events: none; } /* Prevents text from blocking the drag */
-       
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        .player-circle { stroke: white; stroke-width: 2px; }
+        
+        text { font-weight: bold; pointer-events: none; user-select: none; }
+        
+        button { 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            margin: 0 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; color: #666; }
+
+        /* Annotation Styles */
+        .annotation-group text {
+            font-size: 14px;
+            fill: #b30000; 
+            font-weight: normal;
+            text-shadow: 1px 1px 0px white, -1px -1px 0px white, 1px -1px 0px white, -1px 1px 0px white;
+        }
+        .annotation-bg {
+            fill: white;
+            opacity: 0.95; /* Increased opacity slightly for overlapping scenarios */
+            stroke: #b30000; 
+            stroke-width: 1px;
+            rx: 5;
+        }
     </style>
 </head>
 <body>
@@ -36,250 +60,361 @@ filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));
     <p>Drag the players to their spots!</p>
 
     <svg id="rink" width="1000" height="582"></svg>
-   
+    
     <br>
     <button onclick="checkPositions()">Check Positions</button>
+    <button id="nextBtn" onclick="nextLevel()" disabled>Next Question &rarr;</button>
 
 <script>
 let currentLevel = 0;
 const svg = d3.select("#rink");
+const nextBtn = document.getElementById("nextBtn");
 
-// Create the arrowhead definition
-svg.append("defs").append("marker")
-.attr("id", "arrowhead")
-.attr("viewBox", "0 -5 10 10")
-.attr("refX", 8)
-.attr("refY", 0)
-.attr("markerWidth", 6)
-.attr("markerHeight", 6)
-.attr("orient", "auto")
-.append("path")
-.attr("d", "M0,-5L10,0L0,5")
-.attr("fill", "red");
+// --- DEFINITIONS (Markers) ---
+const defs = svg.append("defs");
 
+// Red Arrowhead
+defs.append("marker")
+    .attr("id", "arrowhead-red")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 8).attr("refY", 0)
+    .attr("markerWidth", 6).attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", "red");
+
+// --- DATA: SCENARIOS ---
 const scenarios = [
-{
-title: "The puck is behind the net in your defensive zone",
-goal: "Place players 1 through 4 for the breakout",
-players: [
-{ id: "1", x: 255, y: 510, validSpots: [{x: 255, y: 510}] },
-{ id: "2", x: 180, y: 350, validSpots: [{x: 305, y: 280}, {x: 175, y: 280}, {x: 95, y: 500}] },
-{ id: "3", x: 235, y: 370, validSpots: [{x: 305, y: 280}, {x: 175, y: 280}, {x: 95, y: 500}] },
-{ id: "4", x: 225, y: 315, validSpots: [{x: 305, y: 280}, {x: 175, y: 280}, {x: 95, y: 500}] }
-],
-puck: {x: 230, y: 530},
-opponents: [
-{ x: 210, y: 510, showArrow: false}
-]
-},
-{
-title: "The other team is skating up the ice with the puck",
-goal: "Place position yourself",
-players: [
-{ id: "1", x: 500, y: 530, validSpots: [{x: 730, y: 320}] }
-],
-puck: {x: 680, y: 390},
-opponents: [
-{ x: 660, y: 390 ,
-showArrow: true,
-arrowAngle: 0,
-arrowLength: 70
-},
-{ x: 660, y: 210 ,
-showArrow: true,
-arrowAngle: 0,
-arrowLength: 70
-}
-]
-},
-{
-title: "The other team is skating up the ice with the puck",
-goal: "Place position yourself",
-players: [
-{ id: "1", x: 500, y: 530, validSpots: [{x: 550, y: 175}] }
-],
-puck: {x: 470, y: 150},
-opponents: [
-{ x: 450, y: 150 ,
-showArrow: true,
-arrowAngle: 0,
-arrowLength: 70
-}
-]
-},
-{
-title: "The puck is behind the net in your defensive zone",
-goal: "Place players 1 through 4 for the breakout",
-players: [
-{ id: "1", x: 945, y: 280, validSpots: [{x: 945, y: 280}] },
-{ id: "2", x: 730, y: 230, validSpots: [{x: 840, y: 270}, {x: 830, y: 60}, {x: 830, y: 520}] },
-{ id: "3", x: 730, y: 280, validSpots: [{x: 840, y: 270}, {x: 830, y: 60}, {x: 830, y: 520}] },
-{ id: "4", x: 730, y: 330, validSpots: [{x: 840, y: 270}, {x: 830, y: 60}, {x: 830, y: 520}] }
-],
-puck: {x: 920, y: 280},
-opponents: [
-{ x: 800, y: 370, showArrow: false},
-{ x: 800, y: 100, showArrow: false},
-{ x: 850, y: 290, showArrow: false},
-{ x: 630, y: 280, showArrow: false}
-]
-},
-{
-title: "The puck is in your offensive zone",
-goal: "Place players 1 through 4",
-players: [
-{ id: "1", x: 100, y: 450, validSpots: [{x: 100, y: 100}] },
-{ id: "2", x: 300, y: 450, validSpots: [{x: 160, y: 280}] },
-{ id: "3", x: 500, y: 450, validSpots: [{x: 250, y: 70}, {x: 60, y: 280}] },
-{ id: "4", x: 700, y: 450, validSpots: [{x: 300, y: 280}] }
-],
-puck: {x: 75, y: 75},
-opponents: [
-{ x: 70, y: 100, showArrow: false },
-{ x: 200, y: 90, showArrow: false },
-{ x: 240, y: 260, showArrow: false },
-{ x: 150, y: 230, showArrow: false },
-{ x: 110, y: 280, showArrow: false }  
-]
-},
-{
-title: "The puck is in your defensive zone",
-goal: "Place players 1 through 4",
-players: [
-{ id: "1", x: 820, y: 200, validSpots: [{x: 925, y: 100}] },
-{ id: "2", x: 800, y: 290, validSpots: [{x: 850, y: 280}] },
-{ id: "3", x: 770, y: 210, validSpots: [{x: 930, y: 270}] },
-{ id: "4", x: 760, y: 270, validSpots: [{x: 700, y: 280}] }
-],
-puck: {x: 925, y: 75},
-opponents: [
-{ x: 890, y: 70, showArrow: false },
-{ x: 860, y: 310, showArrow: false },
-{ x: 930, y: 290, showArrow: false },
-{ x: 680, y: 280, showArrow: false }
-]
-}
+    {
+        title: "The puck is behind the net in your defensive zone",
+        goal: "Place players 1 through 4 for the breakout",
+        puck: {x: 230, y: 530},
+        players: [
+            { 
+                id: "1", x: 255, y: 510, validSpots: [{x: 255, y: 510}],
+                explanation: "Battle to get the puck.",
+                annotationArrows: [{x: 95, y: 500}, {x: 175, y: 280}],
+                textOffset: {x: 0, y: -50} // Move text UP so it doesn't hit bottom of screen
+            },
+            { 
+                id: "2", x: 180, y: 350, validSpots: [{x: 175, y: 280}],
+                explanation: "In the slot ready to receive a pass and shoot."
+            },
+            { 
+                id: "3", x: 235, y: 370, validSpots: [{x: 95, y: 500}],
+                explanation: "Helper. Gives #1 a pass option." 
+            },
+            { 
+                id: "4", x: 225, y: 315, validSpots: [{x: 305, y: 280}],
+                explanation: "Gap control. Prevent the other team getting a breakaway.",
+                textOffset: {x: 0, y: -60} // Move text UP
+            }
+        ],
+        opponents: [{ x: 210, y: 510, showArrow: false}]
+    },
+    {
+        title: "The other team is skating up the ice with the puck",
+        goal: "Place position yourself",
+        puck: {x: 680, y: 390},
+        players: [
+            { 
+                id: "1", x: 500, y: 530, validSpots: [{x: 730, y: 320}],
+                explanation: "Prevent a pass to second player for a backdoor goal. Let goalie focus on the shooter.",
+                textOffset: {x: 50, y: 0}
+            }
+        ],
+        opponents: [
+            { 
+                x: 660, y: 390, showArrow: true, arrowAngle: 0, arrowLength: 70, 
+                annotationArrows: [{x: 730, y: 210}] 
+            },
+            { x: 660, y: 210, showArrow: true, arrowAngle: 0, arrowLength: 70 }
+        ]
+    },
+    {
+        title: "The other team is skating up the ice with the puck",
+        goal: "Place position yourself",
+        puck: {x: 470, y: 150},
+        players: [
+            { 
+                id: "1", x: 500, y: 530, validSpots: [{x: 550, y: 175}],
+                explanation: "Force the offensive player to the outside lane. Don't let them into the slot."
+            }
+        ],
+        opponents: [
+            { 
+                x: 450, y: 150, showArrow: true, arrowAngle: 0, arrowLength: 70, 
+                annotationArrows: [{x: 550, y: 100}] 
+            }
+        ]
+    },
+    {
+        title: "The puck is behind the net in your defensive zone",
+        goal: "Place players 1 through 4 for the breakout",
+        puck: {x: 920, y: 280},
+        players: [
+            { 
+                id: "1", x: 945, y: 280, validSpots: [{x: 945, y: 280}],
+                explanation: "Protect the puck and look around for an option.", 
+                annotationArrows: [{x: 830, y: 60}, {x: 830, y: 520}],
+                textOffset: {x: -30, y: 0} // Move text LEFT
+            },
+            { 
+                id: "2", x: 730, y: 230, validSpots: [{x: 830, y: 60}],
+                explanation: "Breakout option.",
+                textOffset: {x: 0, y: -50} // Move text UP
+            },
+            { 
+                id: "3", x: 730, y: 280, validSpots: [{x: 840, y: 270}],
+                explanation: "Protect the slot.",
+                textOffset: {x: 30, y: -50} // Move text UP AND LEFT
+            },
+            { 
+                id: "4", x: 730, y: 330, validSpots: [{x: 830, y: 520}],
+                explanation: "Breakout option.",
+                textOffset: {x: 0, y: 15} // Move text DOWN
+            }
+        ],
+        opponents: [
+            { x: 800, y: 370 }, { x: 800, y: 100 }, 
+            { x: 850, y: 290 }, { x: 630, y: 280 }
+        ]
+    },
+    {
+        title: "The puck is in your offensive zone",
+        goal: "Place players 1 through 4",
+        puck: {x: 75, y: 75},
+        players: [
+            { id: "1", x: 100, y: 450, validSpots: [{x: 100, y: 100}], explanation: "Battle for the puck" },
+            { id: "2", x: 300, y: 450, validSpots: [{x: 160, y: 280}], explanation: "In the slot ready to receive a pass and shoot." ,
+                textOffset: {x: 50, y: 0} // Move text RIGHT
+            },
+            { id: "3", x: 500, y: 450, validSpots: [{x: 250, y: 70}, {x: 60, y: 280}], explanation: "Helper. Provide a pass option to #1" ,
+                textOffset: {x: 10, y: 0} // Move text RIGHT
+            },
+            { id: "4", x: 700, y: 450, validSpots: [{x: 300, y: 280}], explanation: "Gap control. Prevent the other team from a breakaway.",
+                textOffset: {x: 50, y: 0} // Move text RIGHT
+            }
+        ],
+        opponents: [
+            { x: 70, y: 100 }, { x: 200, y: 90 }, { x: 240, y: 260 }, { x: 150, y: 230 }, { x: 110, y: 280 }  
+        ]
+    },
+    {
+        title: "The puck is in your defensive zone",
+        goal: "Place players 1 through 4",
+        puck: {x: 925, y: 75},
+        players: [
+            { 
+                id: "1", x: 820, y: 200, validSpots: [{x: 925, y: 100}], 
+                explanation: "Battle for the puck", 
+                annotationArrows: [{x: 800, y: 100}]
+            }, 
+            { 
+                id: "2", x: 800, y: 290, validSpots: [{x: 850, y: 280}], 
+                explanation: "Prevent a pass behind the net",
+                textOffset: {x: 0, y: 20} 
+            },
+            { 
+                id: "3", x: 770, y: 210, validSpots: [{x: 930, y: 270}], 
+                explanation: "Prevent a pass into the slot",
+                textOffset: {x: 5, y: 60} // Move LEFT and DOWN
+            },
+            { 
+                id: "4", x: 760, y: 270, validSpots: [{x: 800, y: 100}], 
+                explanation: "Available for a breakout pass from the #1",
+                textOffset: {x: -120, y: -20} // Move LEFT and UP
+            }
+        ],
+        opponents: [
+            { x: 890, y: 70 }, { x: 860, y: 310 }, { x: 930, y: 290 }, { x: 680, y: 280 }
+        ]
+    }
 ];
 
 function loadLevel(levelIndex) {
-const level = scenarios[levelIndex];
-d3.select("h1").text(level.title);
-d3.select("p").text(level.goal);
+    nextBtn.disabled = true;
+    
+    if (levelIndex >= scenarios.length) {
+        d3.select("h1").text("Test Complete!");
+        d3.select("p").text("Great hockey IQ!");
+        svg.selectAll("*").remove();
+        nextBtn.style.display = "none";
+        d3.select("button[onclick='checkPositions()']").style("display", "none");
+        return;
+    }
 
-// 1. Clear everything first
-svg.selectAll(".player-group, .puck-group, .target-hint, .opponent-group").remove();
+    const level = scenarios[levelIndex];
+    d3.select("h1").text(level.title);
+    d3.select("p").text(level.goal);
 
-// 2. Draw the Puck
-const puckGroup = svg.append("g")
-.datum(level.puck)
-.attr("class", "puck-group")
-.attr("transform", d => `translate(${d.x}, ${d.y})`)
-.call(d3.drag()
-.on("start", function() { d3.select(this).raise(); })
-.on("drag", function(event, d) {
-d.x = event.x; d.y = event.y;
-d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
-}));
+    svg.selectAll(".player-group, .puck-group, .opponent-group, .annotation-group").remove();
 
-puckGroup.append("circle").attr("r", 10).attr("fill", "black");
+    // Draw Puck
+    const puckGroup = svg.append("g")
+        .datum(level.puck)
+        .attr("class", "puck-group")
+        .attr("transform", d => `translate(${d.x}, ${d.y})`)
+        .call(d3.drag()
+            .on("start", function() { d3.select(this).raise(); })
+            .on("drag", function(event, d) {
+                d.x = event.x; d.y = event.y;
+                d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
+            }));
+    puckGroup.append("circle").attr("r", 10).attr("fill", "black");
 
-// 3. Draw Opponents and their optional arrows
-const opponents = svg.selectAll(".opponent-group")
-.data(level.opponents || [])
-.enter()
-.append("g")
-.attr("class", "opponent-group");
+    // Draw Opponents
+    const opponents = svg.selectAll(".opponent-group")
+        .data(level.opponents || [])
+        .enter()
+        .append("g")
+        .attr("class", "opponent-group");
 
-opponents.each(function(d) {
-const group = d3.select(this);
+    opponents.each(function(d) {
+        const group = d3.select(this);
+        group.append("text")
+            .attr("x", d.x).attr("y", d.y)
+            .attr("text-anchor", "middle").attr("dominant-baseline", "central")
+            .attr("font-size", "30px").attr("fill", "red")
+            .text("X");
 
-// Draw the "X"
-group.append("text")
-.attr("x", d.x)
-.attr("y", d.y)
-.attr("text-anchor", "middle")
-.attr("dominant-baseline", "central")
-.attr("font-size", "30px")
-.attr("fill", "red")
-.text("X");
+        if (d.showArrow) {
+            const radians = (d.arrowAngle || 0) * (Math.PI / 180);
+            const x2 = d.x + (d.arrowLength || 40) * Math.cos(radians);
+            const y2 = d.y + (d.arrowLength || 40) * Math.sin(radians);
+            group.append("line")
+                .attr("x1", d.x).attr("y1", d.y)
+                .attr("x2", x2).attr("y2", y2)
+                .attr("stroke", "red")
+                .attr("stroke-width", 3)
+                .attr("stroke-dasharray", "8,6") 
+                .attr("marker-end", "url(#arrowhead-red)");
+        }
+    });
 
-// Draw the arrow if showArrow is true
-if (d.showArrow) {
-const radians = (d.arrowAngle || 0) * (Math.PI / 180);
-const x2 = d.x + (d.arrowLength || 40) * Math.cos(radians);
-const y2 = d.y + (d.arrowLength || 40) * Math.sin(radians);
+    // Draw Players
+    const playerGroups = svg.selectAll(".player-group")
+        .data(level.players)
+        .enter()
+        .append("g")
+        .attr("class", "player-group")
+        .attr("transform", d => `translate(${d.x}, ${d.y})`)
+        .call(d3.drag()
+            .on("start", function() { d3.select(this).raise(); })
+            .on("drag", dragged));
 
-group.append("line")
-.attr("x1", d.x)
-.attr("y1", d.y)
-.attr("x2", x2)
-.attr("y2", y2)
-.attr("stroke", "red")
-.attr("stroke-width", 3)
-.attr("marker-end", "url(#arrowhead)");
-}
-});
-
-
-// 4. Draw faint hints for valid spots
-//level.players.forEach(player => {
-//player.validSpots.forEach(spot => {
-//svg.append("circle")
-//.attr("class", "target-hint")
-//.attr("cx", spot.x)
-//.attr("cy", spot.y)
-//.attr("r", 20)
-//.attr("fill", "red")
-//.attr("opacity", 0.1);
-//});
-//});
-
-
-// 5. Draw the draggable players
-const playerGroups = svg.selectAll(".player-group")
-.data(level.players)
-.enter()
-.append("g")
-.attr("class", "player-group")
-.attr("transform", d => `translate(${d.x}, ${d.y})`)
-.call(d3.drag()
-.on("start", function() { d3.select(this).raise(); })
-.on("drag", dragged));
-
-playerGroups.append("circle").attr("r", 25).attr("fill", "#007bff");
-playerGroups.append("text").attr("dy", ".35em").attr("text-anchor", "middle").attr("fill", "white").text(d => d.id);
-
+    playerGroups.append("circle").attr("r", 25).attr("class", "player-circle").attr("fill", "#007bff");
+    playerGroups.append("text").attr("dy", ".35em").attr("text-anchor", "middle").attr("fill", "white").text(d => d.id);
 }
 
 function dragged(event, d) {
-d.x = event.x; d.y = event.y;
-d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
+    if (!nextBtn.disabled) return; 
+    d.x = event.x; d.y = event.y;
+    d3.select(this).attr("transform", `translate(${d.x}, ${d.y})`);
 }
 
 function checkPositions() {
-const level = scenarios[currentLevel];
-let correctPlayers = 0;
-level.players.forEach(player => {
-const isCorrect = player.validSpots.some(spot => {
-const dist = Math.sqrt(Math.pow(player.x - spot.x, 2) + Math.pow(player.y - spot.y, 2));
-return dist < 50;
-});
-if (isCorrect) correctPlayers++;
-});
+    const level = scenarios[currentLevel];
+    let correctPlayers = 0;
+    
+    level.players.forEach(player => {
+        const isCorrect = player.validSpots.some(spot => {
+            const dist = Math.sqrt(Math.pow(player.x - spot.x, 2) + Math.pow(player.y - spot.y, 2));
+            return dist < 60; 
+        });
+        if (isCorrect) correctPlayers++;
+    });
 
-if (correctPlayers === level.players.length) {
-alert("Correct! Team is in position.");
-currentLevel++;
-if (currentLevel < scenarios.length) loadLevel(currentLevel);
-} else {
-alert(`You have ${correctPlayers} out of ${level.players.length} players correct.`);
-}
+    if (correctPlayers === level.players.length) {
+        nextBtn.disabled = false;
+        drawAnnotations(level); 
+    } else {
+        alert(`You have ${correctPlayers} out of ${level.players.length} players correct.`);
+        nextBtn.disabled = true;
+    }
 }
 
-svg.on("mousemove", function(event) {
-const coords = d3.pointer(event);
-document.title = `X: ${Math.round(coords[0])}, Y: ${Math.round(coords[1])}`;
-});
+function drawAnnotations(level) {
+    svg.selectAll(".annotation-group").remove();
+    const annotationGroup = svg.append("g").attr("class", "annotation-group");
+
+    // UPDATED: Combine Players AND Opponents to check for annotation arrows
+    const allEntities = [...level.players, ...(level.opponents || [])];
+
+    allEntities.forEach(entity => {
+        
+        // 1. Draw Arrows (Independent of explanation text)
+        if (entity.annotationArrows) {
+            entity.annotationArrows.forEach(arrowTarget => {
+                annotationGroup.append("line")
+                    .attr("x1", entity.x)
+                    .attr("y1", entity.y)
+                    .attr("x2", arrowTarget.x)
+                    .attr("y2", arrowTarget.y)
+                    .attr("stroke", "red") 
+                    .attr("stroke-width", 2)
+                    .attr("stroke-dasharray", "8,6") 
+                    .attr("marker-end", "url(#arrowhead-red)"); 
+            });
+        }
+
+        // 2. TEXT WRAPPING LOGIC (Only runs if 'explanation' exists)
+        if (!entity.explanation) return;
+
+        const words = entity.explanation.split(/\s+/);
+        let lines = [];
+        let currentLine = [];
+        const maxChars = 22; 
+
+        words.forEach(word => {
+            if ((currentLine.join(" ") + " " + word).length > maxChars) {
+                lines.push(currentLine.join(" "));
+                currentLine = [word];
+            } else {
+                currentLine.push(word);
+            }
+        });
+        lines.push(currentLine.join(" "));
+
+        // Calculate Box Dimensions
+        const lineHeight = 16;
+        const padding = 6;
+        const longestLineChars = Math.max(...lines.map(l => l.length));
+        const boxWidth = (longestLineChars * 7.5) + (padding * 2); 
+        const boxHeight = (lines.length * lineHeight) + (padding * 2);
+        
+        // Determine offsets (Default: 0 X, +35 Y)
+        const offsetX = (entity.textOffset && entity.textOffset.x) || 0;
+        const offsetY = (entity.textOffset && entity.textOffset.y) || 35;
+        
+        // Draw White Box
+        annotationGroup.append("rect")
+            .attr("class", "annotation-bg")
+            .attr("x", entity.x - (boxWidth / 2) + offsetX)
+            .attr("y", entity.y + offsetY)
+            .attr("width", boxWidth)
+            .attr("height", boxHeight);
+
+        // Draw Text
+        const textElement = annotationGroup.append("text")
+            .attr("x", entity.x + offsetX)
+            .attr("y", entity.y + offsetY + padding + 2) 
+            .attr("text-anchor", "middle");
+
+        lines.forEach((line, i) => {
+            textElement.append("tspan")
+                .attr("x", entity.x + offsetX)
+                .attr("dy", i === 0 ? "0.8em" : "1.1em")
+                .text(line);
+        });
+    });
+}
+
+function nextLevel() {
+    currentLevel++;
+    loadLevel(currentLevel);
+}
 
 loadLevel(currentLevel);
 </script>
