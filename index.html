@@ -65,13 +65,13 @@
             rx: 5;
         }
         h2 {
-        margin-bottom: 2px; /* Reduces space below the title */
+            margin-bottom: 2px;
         }
 
         p {
-            margin-top: 0;      /* Removes the space above the goal text */
-            margin-bottom: 2px; /* Adjusts space between goal and buttons */
-            color: #555;        /* Optional: makes the goal text slightly softer */
+            margin-top: 0;
+            margin-bottom: 2px;
+            color: #555;
         }
     </style>
 </head>
@@ -96,6 +96,7 @@ const nextBtn = document.getElementById("nextBtn");
 // --- DEFINITIONS (Markers) ---
 const defs = svg.append("defs");
 
+// Standard arrowhead for opponents (Solid)
 defs.append("marker")
     .attr("id", "arrowhead-red")
     .attr("viewBox", "0 -5 10 10")
@@ -106,11 +107,22 @@ defs.append("marker")
     .attr("d", "M0,-5L10,0L0,5")
     .attr("fill", "red");
 
+// Slightly darker arrowhead for annotations (Dashed)
+defs.append("marker")
+    .attr("id", "arrowhead-annotation")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 8).attr("refY", 0)
+    .attr("markerWidth", 6).attr("markerHeight", 6)
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", "#b30000");
+
 // --- DATA: SCENARIOS ---
 const scenarios = [
     {
         title: "The puck is in your offensive zone.",
-        goal: "Drag players 1 through 4 for the breakout",
+        goal: "Drag players 1 through 4 to into supportive positions.",
         puck: {x: 230, y: 530},
         players: [
             { 
@@ -156,7 +168,7 @@ const scenarios = [
     },
     {
         title: "The other team is skating up the ice with the puck.",
-        goal: "Drag yourself in defensive position.",
+        goal: "Drag yourself into a good defensive position.",
         puck: {x: 470, y: 150},
         players: [
             { 
@@ -172,8 +184,8 @@ const scenarios = [
         ]
     },
     {
-        title: "The puck is behind the net in your defensive zone",
-        goal: "Drag players 1 through 4 for the breakout",
+        title: "The puck is behind the net in your defensive zone.",
+        goal: "Drag players 1 through 4 for the breakout.",
         puck: {x: 920, y: 280},
         players: [
             { 
@@ -204,8 +216,8 @@ const scenarios = [
         ]
     },
     {
-        title: "The puck is in your offensive zone",
-        goal: "Drag players 1 through 4",
+        title: "The puck is in your offensive zone.",
+        goal: "Drag players 1 through 4.",
         puck: {x: 75, y: 75},
         players: [
             { id: "1", x: 100, y: 450, validSpots: [{x: 100, y: 100}], explanation: "Battle for the puck" },
@@ -309,7 +321,7 @@ function loadLevel(levelIndex) {
                 .attr("x2", x2).attr("y2", y2)
                 .attr("stroke", "red")
                 .attr("stroke-width", 3)
-                .attr("stroke-dasharray", "8,6") 
+                // Opponent movement arrows are now SOLID (no dasharray)
                 .attr("marker-end", "url(#arrowhead-red)");
         }
     });
@@ -386,10 +398,11 @@ function drawAnnotations(level) {
                     .attr("y1", entity.y)
                     .attr("x2", arrowTarget.x)
                     .attr("y2", arrowTarget.y)
-                    .attr("stroke", "red") 
+                    .attr("stroke", "#b30000") 
                     .attr("stroke-width", 2)
+                    // Feedback annotation arrows are now DASHED
                     .attr("stroke-dasharray", "8,6") 
-                    .attr("marker-end", "url(#arrowhead-red)"); 
+                    .attr("marker-end", "url(#arrowhead-annotation)"); 
             });
         }
 
