@@ -38,6 +38,15 @@
         button:hover { background-color: #0056b3; }
         button:disabled { background-color: #ccc; cursor: not-allowed; color: #666; }
 
+        /* Specific style for Show Answer button */
+        .btn-show-answer {
+            background-color: #ff9800; /* Orange */
+            color: white;
+        }
+        .btn-show-answer:hover {
+            background-color: #e68900;
+        }
+
         /* Annotation Styles */
         .annotation-group text {
             font-size: 14px;
@@ -47,7 +56,7 @@
         }
         .annotation-bg {
             fill: white;
-            opacity: 0.95; /* Increased opacity slightly for overlapping scenarios */
+            opacity: 0.95; 
             stroke: #b30000; 
             stroke-width: 1px;
             rx: 5;
@@ -63,6 +72,7 @@
     
     <br>
     <button onclick="checkPositions()">Check Positions</button>
+    <button class="btn-show-answer" onclick="showAnswer()">Show Answer</button>
     <button id="nextBtn" onclick="nextLevel()" disabled>Next Question &rarr;</button>
 
 <script>
@@ -95,7 +105,7 @@ const scenarios = [
                 id: "1", x: 255, y: 510, validSpots: [{x: 255, y: 510}],
                 explanation: "Battle to get the puck.",
                 annotationArrows: [{x: 95, y: 500}, {x: 175, y: 280}],
-                textOffset: {x: 0, y: -50} // Move text UP so it doesn't hit bottom of screen
+                textOffset: {x: 0, y: -50} 
             },
             { 
                 id: "2", x: 180, y: 350, validSpots: [{x: 175, y: 280}],
@@ -108,7 +118,7 @@ const scenarios = [
             { 
                 id: "4", x: 225, y: 315, validSpots: [{x: 305, y: 280}],
                 explanation: "Gap control. Prevent the other team getting a breakaway.",
-                textOffset: {x: 0, y: -60} // Move text UP
+                textOffset: {x: 0, y: -60} 
             }
         ],
         opponents: [{ x: 210, y: 510, showArrow: false}]
@@ -158,22 +168,22 @@ const scenarios = [
                 id: "1", x: 945, y: 280, validSpots: [{x: 945, y: 280}],
                 explanation: "Protect the puck and look around for an option.", 
                 annotationArrows: [{x: 830, y: 60}, {x: 830, y: 520}],
-                textOffset: {x: -30, y: 0} // Move text LEFT
+                textOffset: {x: -30, y: 0} 
             },
             { 
                 id: "2", x: 730, y: 230, validSpots: [{x: 830, y: 60}],
                 explanation: "Breakout option.",
-                textOffset: {x: 0, y: -50} // Move text UP
+                textOffset: {x: 0, y: -50} 
             },
             { 
                 id: "3", x: 730, y: 280, validSpots: [{x: 840, y: 270}],
                 explanation: "Protect the slot.",
-                textOffset: {x: 30, y: -50} // Move text UP AND LEFT
+                textOffset: {x: 30, y: -50} 
             },
             { 
                 id: "4", x: 730, y: 330, validSpots: [{x: 830, y: 520}],
                 explanation: "Breakout option.",
-                textOffset: {x: 0, y: 15} // Move text DOWN
+                textOffset: {x: 0, y: 15} 
             }
         ],
         opponents: [
@@ -188,13 +198,13 @@ const scenarios = [
         players: [
             { id: "1", x: 100, y: 450, validSpots: [{x: 100, y: 100}], explanation: "Battle for the puck" },
             { id: "2", x: 300, y: 450, validSpots: [{x: 160, y: 280}], explanation: "In the slot ready to receive a pass and shoot." ,
-                textOffset: {x: 50, y: 0} // Move text RIGHT
+                textOffset: {x: 50, y: 0} 
             },
             { id: "3", x: 500, y: 450, validSpots: [{x: 250, y: 70}, {x: 60, y: 280}], explanation: "Helper. Provide a pass option to #1" ,
-                textOffset: {x: 10, y: 0} // Move text RIGHT
+                textOffset: {x: 10, y: 0} 
             },
             { id: "4", x: 700, y: 450, validSpots: [{x: 300, y: 280}], explanation: "Gap control. Prevent the other team from a breakaway.",
-                textOffset: {x: 50, y: 0} // Move text RIGHT
+                textOffset: {x: 50, y: 0} 
             }
         ],
         opponents: [
@@ -219,12 +229,12 @@ const scenarios = [
             { 
                 id: "3", x: 770, y: 210, validSpots: [{x: 930, y: 270}], 
                 explanation: "Prevent a pass into the slot",
-                textOffset: {x: 5, y: 60} // Move LEFT and DOWN
+                textOffset: {x: 5, y: 60} 
             },
             { 
                 id: "4", x: 760, y: 270, validSpots: [{x: 800, y: 100}], 
                 explanation: "Available for a breakout pass from the #1",
-                textOffset: {x: -120, y: -20} // Move LEFT and UP
+                textOffset: {x: -120, y: -20} 
             }
         ],
         opponents: [
@@ -242,6 +252,7 @@ function loadLevel(levelIndex) {
         svg.selectAll("*").remove();
         nextBtn.style.display = "none";
         d3.select("button[onclick='checkPositions()']").style("display", "none");
+        d3.select(".btn-show-answer").style("display", "none");
         return;
     }
 
@@ -335,16 +346,38 @@ function checkPositions() {
     }
 }
 
+// --- NEW FUNCTION: SHOW ANSWER ---
+function showAnswer() {
+    const level = scenarios[currentLevel];
+    
+    // 1. Move players to their first valid spot in the data
+    level.players.forEach(player => {
+        // We pick the first valid spot as the "Answer"
+        const correctSpot = player.validSpots[0];
+        player.x = correctSpot.x;
+        player.y = correctSpot.y;
+    });
+
+    // 2. Animate the visual elements to the new spots
+    svg.selectAll(".player-group")
+        .transition() // Add a smooth animation
+        .duration(500)
+        .attr("transform", d => `translate(${d.x}, ${d.y})`);
+
+    // 3. Enable next button and show annotations
+    nextBtn.disabled = false;
+    drawAnnotations(level);
+}
+
 function drawAnnotations(level) {
     svg.selectAll(".annotation-group").remove();
     const annotationGroup = svg.append("g").attr("class", "annotation-group");
 
-    // UPDATED: Combine Players AND Opponents to check for annotation arrows
     const allEntities = [...level.players, ...(level.opponents || [])];
 
     allEntities.forEach(entity => {
         
-        // 1. Draw Arrows (Independent of explanation text)
+        // 1. Draw Arrows 
         if (entity.annotationArrows) {
             entity.annotationArrows.forEach(arrowTarget => {
                 annotationGroup.append("line")
@@ -359,7 +392,7 @@ function drawAnnotations(level) {
             });
         }
 
-        // 2. TEXT WRAPPING LOGIC (Only runs if 'explanation' exists)
+        // 2. Text Logic
         if (!entity.explanation) return;
 
         const words = entity.explanation.split(/\s+/);
@@ -377,18 +410,15 @@ function drawAnnotations(level) {
         });
         lines.push(currentLine.join(" "));
 
-        // Calculate Box Dimensions
         const lineHeight = 16;
         const padding = 6;
         const longestLineChars = Math.max(...lines.map(l => l.length));
         const boxWidth = (longestLineChars * 7.5) + (padding * 2); 
         const boxHeight = (lines.length * lineHeight) + (padding * 2);
         
-        // Determine offsets (Default: 0 X, +35 Y)
         const offsetX = (entity.textOffset && entity.textOffset.x) || 0;
         const offsetY = (entity.textOffset && entity.textOffset.y) || 35;
         
-        // Draw White Box
         annotationGroup.append("rect")
             .attr("class", "annotation-bg")
             .attr("x", entity.x - (boxWidth / 2) + offsetX)
@@ -396,7 +426,6 @@ function drawAnnotations(level) {
             .attr("width", boxWidth)
             .attr("height", boxHeight);
 
-        // Draw Text
         const textElement = annotationGroup.append("text")
             .attr("x", entity.x + offsetX)
             .attr("y", entity.y + offsetY + padding + 2) 
