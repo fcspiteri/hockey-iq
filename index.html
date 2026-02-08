@@ -5,15 +5,19 @@
     <title>Hockey IQ Test App</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #eee; }
+        body { font-family: sans-serif; text-align: center; background: #eee; margin: 0; padding: 10px; }
         
+        .controls-container {
+            margin-bottom: 20px;
+        }
+
         svg {
             border: 2px solid #333;
             background-color: #f0f0f0; 
             background-image: url("rink.jpg"); 
             background-size: 100% 100%;
             display: block;
-            margin: 20px auto;
+            margin: 0 auto;
         }
 
         .puck-group { cursor: radial-gradient; }
@@ -34,14 +38,13 @@
             color: white;
             border: none;
             border-radius: 5px;
+            transition: background-color 0.2s;
         }
         button:hover { background-color: #0056b3; }
         button:disabled { background-color: #ccc; cursor: not-allowed; color: #666; }
 
-        /* Specific style for Show Answer button */
         .btn-show-answer {
-            background-color: #ff9800; /* Orange */
-            color: white;
+            background-color: #ff9800;
         }
         .btn-show-answer:hover {
             background-color: #e68900;
@@ -61,19 +64,29 @@
             stroke-width: 1px;
             rx: 5;
         }
+        h2 {
+        margin-bottom: 2px; /* Reduces space below the title */
+        }
+
+        p {
+            margin-top: 0;      /* Removes the space above the goal text */
+            margin-bottom: 2px; /* Adjusts space between goal and buttons */
+            color: #555;        /* Optional: makes the goal text slightly softer */
+        }
     </style>
 </head>
 <body>
 
-    <h1>Hockey IQ Test: Power Play Positioning</h1>
+    <h2>Hockey IQ Test: Power Play Positioning</h2>
     <p>Drag the players to their spots!</p>
 
+    <div class="controls-container">
+        <button onclick="checkPositions()">Check Positions</button>
+        <button class="btn-show-answer" onclick="showAnswer()">Show Answer</button>
+        <button id="nextBtn" onclick="nextLevel()" disabled>Next Question &rarr;</button>
+    </div>
+
     <svg id="rink" width="1000" height="582"></svg>
-    
-    <br>
-    <button onclick="checkPositions()">Check Positions</button>
-    <button class="btn-show-answer" onclick="showAnswer()">Show Answer</button>
-    <button id="nextBtn" onclick="nextLevel()" disabled>Next Question &rarr;</button>
 
 <script>
 let currentLevel = 0;
@@ -83,7 +96,6 @@ const nextBtn = document.getElementById("nextBtn");
 // --- DEFINITIONS (Markers) ---
 const defs = svg.append("defs");
 
-// Red Arrowhead
 defs.append("marker")
     .attr("id", "arrowhead-red")
     .attr("viewBox", "0 -5 10 10")
@@ -97,7 +109,7 @@ defs.append("marker")
 // --- DATA: SCENARIOS ---
 const scenarios = [
     {
-        title: "The puck is behind the net in your defensive zone",
+        title: "The puck is in your offensive zone.",
         goal: "Place players 1 through 4 for the breakout",
         puck: {x: 230, y: 530},
         players: [
@@ -124,8 +136,8 @@ const scenarios = [
         opponents: [{ x: 210, y: 510, showArrow: false}]
     },
     {
-        title: "The other team is skating up the ice with the puck",
-        goal: "Place position yourself",
+        title: "The other team is skating into your defensive zone with the puck",
+        goal: "Place yourself in a good position to defend.",
         puck: {x: 680, y: 390},
         players: [
             { 
@@ -143,8 +155,8 @@ const scenarios = [
         ]
     },
     {
-        title: "The other team is skating up the ice with the puck",
-        goal: "Place position yourself",
+        title: "The other team is skating up the ice with the puck.",
+        goal: "Place yourself in defensive position.",
         puck: {x: 470, y: 150},
         players: [
             { 
@@ -247,7 +259,7 @@ function loadLevel(levelIndex) {
     nextBtn.disabled = true;
     
     if (levelIndex >= scenarios.length) {
-        d3.select("h1").text("Test Complete!");
+        d3.select("h2").text("Test Complete!");
         d3.select("p").text("Great hockey IQ!");
         svg.selectAll("*").remove();
         nextBtn.style.display = "none";
@@ -257,12 +269,11 @@ function loadLevel(levelIndex) {
     }
 
     const level = scenarios[levelIndex];
-    d3.select("h1").text(level.title);
+    d3.select("h2").text(level.title);
     d3.select("p").text(level.goal);
 
     svg.selectAll(".player-group, .puck-group, .opponent-group, .annotation-group").remove();
 
-    // Draw Puck
     const puckGroup = svg.append("g")
         .datum(level.puck)
         .attr("class", "puck-group")
@@ -275,7 +286,6 @@ function loadLevel(levelIndex) {
             }));
     puckGroup.append("circle").attr("r", 10).attr("fill", "black");
 
-    // Draw Opponents
     const opponents = svg.selectAll(".opponent-group")
         .data(level.opponents || [])
         .enter()
@@ -304,7 +314,6 @@ function loadLevel(levelIndex) {
         }
     });
 
-    // Draw Players
     const playerGroups = svg.selectAll(".player-group")
         .data(level.players)
         .enter()
@@ -346,25 +355,19 @@ function checkPositions() {
     }
 }
 
-// --- NEW FUNCTION: SHOW ANSWER ---
 function showAnswer() {
     const level = scenarios[currentLevel];
-    
-    // 1. Move players to their first valid spot in the data
     level.players.forEach(player => {
-        // We pick the first valid spot as the "Answer"
         const correctSpot = player.validSpots[0];
         player.x = correctSpot.x;
         player.y = correctSpot.y;
     });
 
-    // 2. Animate the visual elements to the new spots
     svg.selectAll(".player-group")
-        .transition() // Add a smooth animation
+        .transition()
         .duration(500)
         .attr("transform", d => `translate(${d.x}, ${d.y})`);
 
-    // 3. Enable next button and show annotations
     nextBtn.disabled = false;
     drawAnnotations(level);
 }
@@ -376,8 +379,6 @@ function drawAnnotations(level) {
     const allEntities = [...level.players, ...(level.opponents || [])];
 
     allEntities.forEach(entity => {
-        
-        // 1. Draw Arrows 
         if (entity.annotationArrows) {
             entity.annotationArrows.forEach(arrowTarget => {
                 annotationGroup.append("line")
@@ -392,7 +393,6 @@ function drawAnnotations(level) {
             });
         }
 
-        // 2. Text Logic
         if (!entity.explanation) return;
 
         const words = entity.explanation.split(/\s+/);
